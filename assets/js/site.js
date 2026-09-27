@@ -1,16 +1,42 @@
 
 (function(){
+  var root=document.documentElement;
+  var EN=root.lang==='en';
+  var S=EN?{menu:'Menu',close:'Close',toLight:'Switch to light mode',toDark:'Switch to dark mode',
+            err:'Please enter your name, a way to reach you and your message.',hello:'Hello, I am writing from sotgec.com.',
+            subject:'Subject: ',country:'Project country: ',td:'Chad',ci:'Côte d’Ivoire',name:'Name: ',contact:'Contact: ',mailSubject:'Request from sotgec.com: '}
+          :{menu:'Menu',close:'Fermer',toLight:'Passer en mode clair',toDark:'Passer en mode sombre',
+            err:'Renseignez votre nom, un moyen de vous joindre et votre message.',hello:'Bonjour, je vous écris depuis sotgec.com.',
+            subject:'Sujet : ',country:'Pays du projet : ',td:'Tchad',ci:'Côte d’Ivoire',name:'Nom : ',contact:'Contact : ',mailSubject:'Demande depuis sotgec.com : '};
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* thème clair / sombre */
+  var tbtn=document.querySelector('.theme-btn');
+  var meta=document.querySelector('meta[name=theme-color]');
+  function applyTheme(t){
+    root.setAttribute('data-theme',t);
+    if(meta){meta.setAttribute('content',t==='light'?'#F6F7F5':'#0E1A24');}
+    if(tbtn){tbtn.setAttribute('aria-label',t==='light'?S.toDark:S.toLight);tbtn.setAttribute('title',t==='light'?S.toDark:S.toLight);}
+  }
+  applyTheme(root.getAttribute('data-theme')==='light'?'light':'dark');
+  if(tbtn){
+    tbtn.addEventListener('click',function(){
+      var t=root.getAttribute('data-theme')==='light'?'dark':'light';
+      applyTheme(t);
+      try{localStorage.setItem('sotgec-theme',t);}catch(e){}
+    });
+  }
+
   var header = document.querySelector('.site-header');
   var btn=document.querySelector('.menu-btn'), nav=document.getElementById('nav');
   if(btn&&nav){
     btn.addEventListener('click',function(){
       var open=nav.classList.toggle('open');
       btn.setAttribute('aria-expanded',open?'true':'false');
-      btn.textContent=open?'Fermer':'Menu';
+      btn.textContent=open?S.close:S.menu;
     });
     document.addEventListener('keydown',function(e){
-      if(e.key==='Escape'&&nav.classList.contains('open')){nav.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.textContent='Menu';btn.focus();}
+      if(e.key==='Escape'&&nav.classList.contains('open')){nav.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.textContent=S.menu;btn.focus();}
     });
   }
   document.querySelectorAll('[data-year]').forEach(function(y){y.textContent=new Date().getFullYear();});
@@ -33,8 +59,7 @@
   var heroEnd = document.querySelector('[data-header-solid-after]');
   onScroll(function(){
     var limit = heroEnd ? heroEnd.offsetTop + heroEnd.offsetHeight - 90 : 40;
-    if(!heroEnd) limit = 40;
-    header.classList.toggle('solid', window.scrollY > (heroEnd ? limit : 40));
+    header.classList.toggle('solid', window.scrollY > limit);
   });
 
   if(!reduce && window.gsap && window.ScrollTrigger){
@@ -49,7 +74,6 @@
     var video=scrub.querySelector('video');
     var gauge=scrub.querySelectorAll('.gauge li');
     var cue=scrub.querySelector('.scroll-cue');
-    var marks=[].slice.call(scrub.querySelectorAll('.chapter'));
     var target=0, current=0, ready=false;
     function progress(){
       var r=scrub.getBoundingClientRect();
@@ -90,13 +114,12 @@
     function value(n){var el=f.elements[n];return el?String(el.value||'').trim():'';}
     function compose(){
       var pays=f.querySelector('input[name=pays]:checked');
-      var lines=['Bonjour, je vous écris depuis sotgec.com.','','Sujet : '+value('sujet'),
-        'Pays du projet : '+(pays&&pays.value==='ci'?'Côte d’Ivoire':'Tchad'),
-        'Nom : '+value('nom'),'Contact : '+value('contact'),'',value('msg')];
-      return {text:lines.join('\n'),pays:pays?pays.value:'td'};
+      var ci=pays&&pays.value==='ci';
+      var lines=[S.hello,'',S.subject+value('sujet'),S.country+(ci?S.ci:S.td),S.name+value('nom'),S.contact+value('contact'),'',value('msg')];
+      return {text:lines.join('\n'),pays:ci?'ci':'td'};
     }
     function check(){
-      if(!value('nom')||!value('contact')||!value('msg')){err.textContent='Renseignez votre nom, un moyen de vous joindre et votre message.';return false;}
+      if(!value('nom')||!value('contact')||!value('msg')){err.textContent=S.err;return false;}
       err.textContent='';return true;
     }
     f.querySelectorAll('[data-send]').forEach(function(b){
@@ -106,7 +129,7 @@
         if(b.getAttribute('data-send')==='wa'){
           window.open('https://wa.me/'+WA[c.pays]+'?text='+encodeURIComponent(c.text),'_blank','noopener');
         }else{
-          window.location.href='mailto:'+f.getAttribute('data-mailbox')+'?subject='+encodeURIComponent('Demande depuis sotgec.com : '+value('sujet'))+'&body='+encodeURIComponent(c.text);
+          window.location.href='mailto:'+f.getAttribute('data-mailbox')+'?subject='+encodeURIComponent(S.mailSubject+value('sujet'))+'&body='+encodeURIComponent(c.text);
         }
       });
     });

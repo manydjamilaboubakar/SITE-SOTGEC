@@ -273,3 +273,81 @@ textarea{min-height:150px;resize:vertical}
 }
 
 .stage video{opacity:0;transition:opacity .5s}
+
+/* ---------- outils d'en-tête : langue et thème ---------- */
+.bar{gap:18px}
+.tools{display:flex;align-items:center;gap:10px}
+.lang{font:700 .92rem var(--f-d);font-stretch:104%;text-decoration:none;border:1.5px solid currentColor;padding:8px 10px;line-height:1;letter-spacing:.04em}
+.lang:hover{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.theme-btn{display:inline-grid;place-items:center;width:40px;height:40px;background:transparent;color:inherit;border:1.5px solid currentColor;cursor:pointer;padding:0}
+.theme-btn svg{width:20px;height:20px}
+.theme-btn .i-sun{display:none}
+.theme-btn:hover{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.brand .logo-l{display:none}
+.foot .logo-l{display:none}
+@media (max-width:1000px){
+  .bar{gap:10px}
+  .brand{margin-right:auto}
+}
+.office{margin:0;color:var(--muted)}
+.office strong{display:block;color:inherit;font:700 1rem var(--f-d);font-stretch:104%}
+
+/* ---------- mode clair ---------- */
+html[data-theme=light]{color-scheme:light;--accent-dk:#B35C00}
+html[data-theme=light] body.t-immo{--accent-dk:#157A6E}
+html[data-theme=light] body.t-conseil{--accent-dk:#1F4E79}
+html[data-theme=light] body{background:#F6F7F5;color:var(--ink)}
+
+html[data-theme=light] .site-header,html[data-theme=light] .site-header.solid{background:rgba(246,247,245,.94);backdrop-filter:blur(10px);box-shadow:0 1px 0 var(--rule-l);color:var(--ink)}
+html[data-theme=light] .brand .logo-d,html[data-theme=light] .foot .logo-d{display:none}
+html[data-theme=light] .brand .logo-l,html[data-theme=light] .foot .logo-l{display:block}
+html[data-theme=light] .menu-btn{color:var(--ink);border-color:var(--ink)}
+html[data-theme=light] .lang:hover,html[data-theme=light] .theme-btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+html[data-theme=light] .nav .nav-cta:hover{background:var(--ink);color:var(--paper)}
+html[data-theme=light] .theme-btn .i-sun{display:block}
+html[data-theme=light] .theme-btn .i-moon{display:none}
+@media (max-width:1000px){
+  html[data-theme=light] .nav{background:#F6F7F5;border-bottom-color:var(--rule-l)}
+  html[data-theme=light] .nav a{border-bottom-color:var(--rule-l)}
+}
+
+/* sections à image ou appel final : elles restent sombres */
+html[data-theme=light] .cta,html[data-theme=light] .phero,html[data-theme=light] .scrub{color:var(--paper)}
+
+/* sections sombres sans image : elles passent en clair */
+html[data-theme=light] .flip{background:#FBFBFA;color:var(--ink)}
+html[data-theme=light] .flip .tag{color:var(--ink)}
+html[data-theme=light] .flip .tag::before{background:var(--orange)}
+html[data-theme=light] .flip .sec-head p,
+html[data-theme=light] .flip .method p,
+html[data-theme=light] .flip .steps p,
+html[data-theme=light] .flip .note p,
+html[data-theme=light] .flip .office{color:var(--ink-2)}
+html[data-theme=light] .flip .method li,html[data-theme=light] .flip .steps li{border-left-color:var(--rule-l)}
+html[data-theme=light] .flip .method b{-webkit-text-stroke-color:var(--accent-dk)}
+html[data-theme=light] .flip .steps b{color:var(--accent-dk)}
+html[data-theme=light] .flip .note{border-color:var(--rule-l)}
+html[data-theme=light] .flip .note.hz::before{background:repeating-linear-gradient(-45deg,var(--orange) 0 18px,var(--ink) 18px 36px)}
+html[data-theme=light] .flip .lands{background:var(--rule-l)}
+html[data-theme=light] .flip .land{background:#FBFBFA}
+html[data-theme=light] .flip .land .state{color:var(--accent-dk)}
+html[data-theme=light] .flip .land.ci .state{color:#157A6E}
+html[data-theme=light] .flip .btn-line:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+html[data-theme=light] .flip .btn-solid:hover{background:var(--ink);color:var(--paper)}
+html[data-theme=light] .on-light{background:#E9ECE9}
+html[data-theme=light] .side{background:#FFFFFF;color:var(--ink);border:1.5px solid var(--rule-l)}
+html[data-theme=light] .side p{color:var(--ink-2)}
+html[data-theme=light] .side a{color:var(--ink)}
+html[data-theme=light] .side .tel{color:#B35C00}
+html[data-theme=light] .side hr{border-top-color:var(--rule-l)}
+html[data-theme=light] .office strong{color:var(--ink)}
+@media (max-width:860px){
+  html[data-theme=light] .flip .method li,html[data-theme=light] .flip .steps li{border-top-color:var(--rule-l)}
+}
+
+/* pied de page clair */
+html[data-theme=light] .site-footer{background:#E9ECE9;color:var(--ink);border-top-color:var(--rule-l)}
+html[data-theme=light] .foot h2{color:var(--ink)}
+html[data-theme=light] .foot li,html[data-theme=light] .foot p,html[data-theme=light] .legal{color:var(--ink-2)}
+html[data-theme=light] .foot a:hover{color:#B35C00}
+html[data-theme=light] .legal{border-top-color:var(--rule-l)}
