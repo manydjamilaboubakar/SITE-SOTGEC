@@ -4,10 +4,14 @@
   var EN=root.lang==='en';
   var S=EN?{menu:'Menu',close:'Close',toLight:'Switch to light mode',toDark:'Switch to dark mode',
             err:'Please enter your name, a way to reach you and your message.',hello:'Hello, I am writing from sotgec.com.',
-            subject:'Subject: ',country:'Project country: ',td:'Chad',ci:'Côte d’Ivoire',name:'Name: ',contact:'Contact: ',mailSubject:'Request from sotgec.com: '}
+            subject:'Subject: ',country:'Project country: ',td:'Chad',ci:'Côte d’Ivoire',name:'Name: ',contact:'Contact: ',mailSubject:'Request from sotgec.com: ',
+            cookieText:'We use audience-measurement cookies to understand how the site is used. No data is shared with third parties.',
+            cookieAccept:'Accept',cookieDecline:'Decline',cookiePolicy:'Learn more'}
           :{menu:'Menu',close:'Fermer',toLight:'Passer en mode clair',toDark:'Passer en mode sombre',
             err:'Renseignez votre nom, un moyen de vous joindre et votre message.',hello:'Bonjour, je vous écris depuis sotgec.com.',
-            subject:'Sujet : ',country:'Pays du projet : ',td:'Tchad',ci:'Côte d’Ivoire',name:'Nom : ',contact:'Contact : ',mailSubject:'Demande depuis sotgec.com : '};
+            subject:'Sujet : ',country:'Pays du projet : ',td:'Tchad',ci:'Côte d’Ivoire',name:'Nom : ',contact:'Contact : ',mailSubject:'Demande depuis sotgec.com : ',
+            cookieText:'Nous utilisons des cookies de mesure d’audience pour comprendre l’usage du site. Aucune donnée n’est partagée avec des tiers.',
+            cookieAccept:'Accepter',cookieDecline:'Refuser',cookiePolicy:'En savoir plus'};
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* thème clair / sombre */
@@ -172,4 +176,41 @@
     });
     f.addEventListener('submit',function(e){e.preventDefault();});
   });
+
+  /* Bandeau de consentement (mesure d'audience GA4). GA4 est chargé avec
+     un consentement par défaut refusé (voir le tag dans <head> de chaque
+     page) : tant que le visiteur n'a pas choisi, aucune donnée
+     d'audience n'est envoyée/cookée. */
+  function gtagConsent(granted){
+    if(typeof window.gtag!=='function')return;
+    window.gtag('consent','update',{
+      analytics_storage:granted?'granted':'denied',
+      ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'
+    });
+  }
+  try{
+    var choice=localStorage.getItem('sotgec-consent');
+    if(choice==='granted'){gtagConsent(true);}
+    else if(choice!=='denied'){
+      var bar=document.createElement('div');
+      bar.className='cookie-bar';
+      bar.setAttribute('role','dialog');
+      bar.setAttribute('aria-label',EN?'Cookie preferences':'Préférences de cookies');
+      var policyHref=EN?'/en/privacy/':'/confidentialite/';
+      bar.innerHTML='<p>'+S.cookieText+' <a href="'+policyHref+'">'+S.cookiePolicy+'</a></p>'+
+        '<div class="cookie-actions">'+
+        '<button type="button" class="btn-line" data-cookie="decline">'+S.cookieDecline+'</button>'+
+        '<button type="button" class="btn-solid" data-cookie="accept">'+S.cookieAccept+'</button>'+
+        '</div>';
+      document.body.appendChild(bar);
+      bar.addEventListener('click',function(e){
+        var b=e.target.closest('[data-cookie]');
+        if(!b)return;
+        var granted=b.getAttribute('data-cookie')==='accept';
+        try{localStorage.setItem('sotgec-consent',granted?'granted':'denied');}catch(err){}
+        gtagConsent(granted);
+        bar.remove();
+      });
+    }
+  }catch(e){/* silencieux : pas de bandeau si localStorage indisponible, GA4 reste sans consentement */}
 })();
