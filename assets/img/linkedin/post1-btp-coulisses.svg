@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E1A24"/>
+      <stop offset="100%" stop-color="#15242F"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+
+  <g transform="translate(72,72) scale(0.85)">
+    <polygon points="0,48 48,0 96,48 96,62 48,14 0,62" fill="#63A4E8"/><polygon points="0,69 48,21 96,69 96,83 48,35 0,83" fill="#3CC6B0"/><polygon points="0,90 48,42 96,90 96,104 48,56 0,104" fill="#FF9000"/>
+  </g>
+
+  <rect x="747.5" y="62.0" width="260.5" height="48" rx="24" fill="#FF9000"/>
+  <text x="877.8" y="96.0" text-anchor="middle" font-family="Liberation Sans, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="1" fill="#0E1A24">COULISSES · BTP</text>
+
+  <text x="72" y="478.0" font-family="Liberation Sans, Arial, sans-serif" font-size="66" font-weight="700" fill="#EEF1F2">5 étapes</text>
+  <text x="72" y="560.0" font-family="Liberation Sans, Arial, sans-serif" font-size="66" font-weight="700" fill="#EEF1F2">avant la remise</text>
+  <text x="72" y="642.0" font-family="Liberation Sans, Arial, sans-serif" font-size="66" font-weight="700" fill="#EEF1F2">des clés.</text>
+  
+  <text x="72" y="744.0" font-family="Liberation Sans, Arial, sans-serif" font-size="30" font-weight="400" fill="#A7B3BC">Étude · Planning · Réalisation · Contrôle · Réception</text>
+
+  <text x="72" y="1008" font-family="Liberation Sans, Arial, sans-serif" font-size="26" font-weight="700" fill="#EEF1F2">SOTGEC</text>
+  <text x="72" y="1040" font-family="Liberation Sans, Arial, sans-serif" font-size="22" font-weight="400" fill="#A7B3BC">sotgec.com</text>
+
+  <rect x="0" y="1066" width="360.00" height="14" fill="#63A4E8"/>
+  <rect x="360.00" y="1066" width="360.00" height="14" fill="#3CC6B0"/>
+  <rect x="720.00" y="1066" width="360.00" height="14" fill="#FF9000"/>
+</svg>
