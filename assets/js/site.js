@@ -109,6 +109,41 @@
 
   /* formulaires : WhatsApp ou email */
   var WA={td:'23595736513',ci:'2250712209441'};
+
+  /* Enregistrement des demandes : chaque envoi WhatsApp/email appelle aussi
+     la fonction Supabase "notify-lead", qui enregistre la demande dans la
+     base (table demandes_site) puis envoie un email interne. Cet appel ne
+     bloque jamais l'ouverture de WhatsApp/email : en cas d'échec réseau ou
+     serveur, il échoue silencieusement et l'expérience visiteur ne change
+     pas. */
+  var SUPABASE_URL='https://zgxvihvyjaeomezpwngq.supabase.co';
+  var SUPABASE_ANON_KEY='sb_publishable_Qd66_zkeyQssl7fPNjL8xg_BMMTbeM9';
+  var MAILBOX_TO_ENTITE={'contact@sotgec.com':'contact','btp@sotgec.com':'btp','immobilier@sotgec.com':'immobilier','consulting@sotgec.com':'consulting'};
+  function saveDemande(f,c,canal){
+    try{
+      var entite=MAILBOX_TO_ENTITE[f.getAttribute('data-mailbox')]||'contact';
+      fetch(SUPABASE_URL+'/functions/v1/notify-lead',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'apikey':SUPABASE_ANON_KEY,
+          'Authorization':'Bearer '+SUPABASE_ANON_KEY
+        },
+        body:JSON.stringify({
+          entite:entite,
+          page_source:window.location.href,
+          langue:(document.documentElement.lang||'fr').slice(0,2),
+          nom:f.elements.nom?f.elements.nom.value.trim():'',
+          contact:f.elements.contact?f.elements.contact.value.trim():'',
+          sujet:f.elements.sujet?f.elements.sujet.value:'',
+          pays:c.pays,
+          message:f.elements.msg?f.elements.msg.value.trim():'',
+          canal:canal
+        })
+      }).catch(function(){/* silencieux : ne bloque jamais l'envoi WA/email */});
+    }catch(e){/* silencieux */}
+  }
+
   document.querySelectorAll('form[data-mailbox]').forEach(function(f){
     var err=f.querySelector('.err');
     function value(n){var el=f.elements[n];return el?String(el.value||'').trim():'';}
@@ -127,8 +162,10 @@
         if(!check())return;
         var c=compose();
         if(b.getAttribute('data-send')==='wa'){
+          saveDemande(f,c,'whatsapp');
           window.open('https://wa.me/'+WA[c.pays]+'?text='+encodeURIComponent(c.text),'_blank','noopener');
         }else{
+          saveDemande(f,c,'email');
           window.location.href='mailto:'+f.getAttribute('data-mailbox')+'?subject='+encodeURIComponent(S.mailSubject+value('sujet'))+'&body='+encodeURIComponent(c.text);
         }
       });
