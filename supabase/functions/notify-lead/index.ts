@@ -5,10 +5,13 @@
 //      le site n'a besoin d'aucune clé pour écrire dans la table) ;
 //   2. envoie un email interne via l'API Hostinger, depuis la vraie boîte
 //      du domaine manydjamilaboubakar@sotgec.com (déjà active chez
-//      l'hébergeur du site), vers sotgec.btp@gmail.com — la boîte déjà
-//      surveillée par l'équipe. Choisi plutôt que Gmail SMTP : l'expéditeur
-//      affiché est le domaine sotgec.com (plus professionnel) et aucun mot
-//      de passe d'application n'est nécessaire.
+//      l'hébergeur du site). Destinataire principal : sotgec.btp@gmail.com
+//      (la boîte déjà surveillée par l'équipe, jamais retirée — garantit
+//      qu'aucune demande n'est manquée). Copie (cc) : l'alias du
+//      département concerné (btp@/immobilier@/consulting@/contact@
+//      sotgec.com), pour que chaque département reçoive et puisse répondre
+//      directement à ses propres demandes dès que ces boîtes existent
+//      réellement chez l'hébergeur — voir la remarque plus bas.
 //
 // Secret à définir avant que l'email fonctionne (voir supabase/README.md) :
 //   supabase secrets set HOSTINGER_API_TOKEN=xxxxxxxx --project-ref zgxvihvyjaeomezpwngq
@@ -17,27 +20,46 @@
 // enregistrée (le point le plus important) ; seul l'email échoue,
 // silencieusement, et la ligne reste marquée "non notifiée".
 //
-// Limite connue : l'API Hostinger "send" n'accepte pas d'en-tête Reply-To
-// personnalisé (contrairement à l'ancienne version SMTP/Gmail). Le contact
-// du visiteur reste bien visible dans le corps de l'email ; l'équipe doit
-// le copier manuellement pour répondre, plutôt que de cliquer "Répondre".
+// Limite connue n°1 : l'API Hostinger "send" n'accepte pas d'en-tête
+// Reply-To personnalisé. Le contact du visiteur reste bien visible dans le
+// corps de l'email ; il faut le copier manuellement pour répondre, plutôt
+// que de cliquer "Répondre".
+//
+// Limite connue n°2 (à vérifier) : au 28/09/2026, seule la boîte
+// manydjamilaboubakar@sotgec.com est confirmée comme mailbox Hostinger
+// réelle (interrogée via l'API). Les adresses btp@/immobilier@/
+// consulting@/contact@sotgec.com utilisées ci-dessous en copie n'ont pas pu
+// être confirmées comme boîtes existantes — si elles n'existent pas
+// encore, la copie échoue silencieusement côté Hostinger (l'email
+// principal vers sotgec.btp@gmail.com part quand même) et il suffira de
+// les créer dans hPanel pour que le routage par département s'active tout
+// seul, sans autre changement de code.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const HOSTINGER_API_TOKEN = Deno.env.get("HOSTINGER_API_TOKEN");
 const HOSTINGER_MAILBOX_ID = Deno.env.get("HOSTINGER_MAILBOX_ID") ?? "ACc2442f9422dc0b4168109c49c0c9"; // manydjamilaboubakar@sotgec.com
-const HOSTINGER_FROM_LABEL = Deno.env.get("HOSTINGER_FROM_LABEL") ?? "SOTGEC Site";
 const NOTIFY_TO = Deno.env.get("NOTIFY_TO") ?? "sotgec.btp@gmail.com";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const ENTITE_LABEL: Record<string, string> = {
-  contact: "Contact général",
+  contact: "SOTGEC Contact",
   btp: "SOTGEC BTP",
   immobilier: "SOTGEC Immobilier",
   consulting: "SOTGEC Consulting",
+};
+
+// Alias de département — copiés sur chaque notification pour que le bon
+// département reçoive ses propres demandes. Correspond aux data-mailbox
+// utilisés côté site (assets/js/site.js).
+const ENTITE_CC: Record<string, string> = {
+  contact: "contact@sotgec.com",
+  btp: "btp@sotgec.com",
+  immobilier: "immobilier@sotgec.com",
+  consulting: "consulting@sotgec.com",
 };
 
 const CORS_HEADERS = {
@@ -129,6 +151,9 @@ Deno.serve(async (req: Request) => {
       `— Enregistré automatiquement dans Supabase (id ${record.id})`,
     ].join("\n");
 
+    const ccAddress = ENTITE_CC[record.entite];
+    const cc = ccAddress && ccAddress !== NOTIFY_TO ? [ccAddress] : undefined;
+
     try {
       const res = await fetch(
         `https://api.mail.hostinger.com/api/v1/mailboxes/${HOSTINGER_MAILBOX_ID}/send`,
@@ -140,7 +165,8 @@ Deno.serve(async (req: Request) => {
           },
           body: JSON.stringify({
             to: [NOTIFY_TO],
-            displayName: HOSTINGER_FROM_LABEL,
+            ...(cc ? { cc } : {}),
+            displayName: entiteLabel,
             subject: sujet,
             html,
             text,
