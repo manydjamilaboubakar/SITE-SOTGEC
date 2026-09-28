@@ -23,7 +23,9 @@ remplacé par celui-ci le 28/09/2026.
   2. envoie un email interne via l'**API Hostinger**, depuis la vraie boîte
      du domaine `manydjamilaboubakar@sotgec.com` (déjà active chez
      l'hébergeur du site), vers `sotgec.btp@gmail.com` — la boîte déjà
-     surveillée par l'équipe.
+     surveillée par l'équipe — avec en copie (cc) l'alias du département
+     concerné (`btp@`, `immobilier@`, `consulting@` ou `contact@sotgec.com`),
+     pour que chaque département reçoive directement ses propres demandes.
 - `assets/js/site.js` appelle cette fonction à chaque clic WhatsApp/email
   des formulaires, avec l'URL et la clé publique du projet déjà renseignées
   (`site.js?v=5` sur les 19 pages du site).
@@ -41,6 +43,30 @@ Google. Limite à connaître : l'API Hostinger n'accepte pas d'en-tête
 Reply-To personnalisé — le contact du visiteur reste affiché dans le corps
 de l'email, mais l'équipe doit le copier manuellement pour répondre plutôt
 que de cliquer « Répondre ».
+
+### Réponse par département (28/09/2026)
+
+Chaque demande copie désormais l'alias du département concerné
+(`btp@sotgec.com`, `immobilier@sotgec.com`, `consulting@sotgec.com` ou
+`contact@sotgec.com`) en plus de `sotgec.btp@gmail.com`, pour que le bon
+département reçoive et puisse répondre directement à ses propres demandes,
+sans dépendre d'une seule boîte partagée.
+
+**À vérifier :** en interrogeant l'API Hostinger, une seule boîte mail est
+confirmée comme réellement provisionnée chez l'hébergeur :
+`manydjamilaboubakar@sotgec.com`. Les adresses `btp@`, `immobilier@`,
+`consulting@` et `contact@sotgec.com` sont utilisées par le site (boutons
+« envoyer par email ») et par cette copie, mais leur existence en tant que
+boîtes réelles n'a pas pu être confirmée depuis cette session. Deux
+vérifications à faire dans hPanel → Emails :
+- Si ces boîtes **existent déjà** : rien à faire, le routage par
+  département fonctionne dès maintenant.
+- Si elles **n'existent pas** : les créer résoudra deux choses à la fois —
+  le routage par département de cette copie, *et* le bouton « envoyer par
+  email » du site pour BTP/Immobilier/Consulting/Contact, qui pourrait
+  actuellement envoyer dans le vide pour un visiteur qui choisit ce canal
+  (`sotgec.btp@gmail.com` reste dans tous les cas la destination
+  principale, donc aucune demande n'est perdue côté formulaire).
 
 ## Ce qu'il reste à faire (≈ 5 minutes)
 
