@@ -2,22 +2,26 @@
 // Envoie un email interne dès qu'une nouvelle demande arrive dans
 // public.demandes_site (déclenché par le trigger on_nouvelle_demande).
 //
-// Nécessite le secret RESEND_API_KEY (https://resend.com — gratuit,
-// 100 emails/jour). À définir avec :
-//   supabase secrets set RESEND_API_KEY=re_xxxxxxxx --project-ref icjpmboahhsovvcijvhs
+// Envoi via le compte Gmail existant sotgec.btp@gmail.com, avec un mot de
+// passe d'application (pas le mot de passe du compte). Aucun nouveau
+// prestataire à créer. Secrets à définir :
+//   supabase secrets set GMAIL_USER=sotgec.btp@gmail.com --project-ref icjpmboahhsovvcijvhs
+//   supabase secrets set GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx --project-ref icjpmboahhsovvcijvhs
 //
-// Tant que le secret n'est pas défini, la fonction répond sans erreur et
+// Le mot de passe d'application se génère sur myaccount.google.com/apppasswords
+// (nécessite la validation en deux étapes activée sur le compte Gmail).
+//
+// Tant que les secrets ne sont pas définis, la fonction répond sans erreur et
 // marque simplement la demande comme "non notifiée" : aucune demande n'est
 // perdue, elle reste visible dans la table en attendant.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const GMAIL_USER = Deno.env.get("GMAIL_USER");
+const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
 const NOTIFY_TO = Deno.env.get("NOTIFY_TO") ?? "sotgec.btp@gmail.com";
-// Domaine d'envoi par défaut de Resend, utilisable sans vérification DNS.
-// À remplacer par une adresse @sotgec.com une fois le domaine vérifié sur Resend.
-const NOTIFY_FROM = Deno.env.get("NOTIFY_FROM") ?? "SOTGEC Site <onboarding@resend.dev>";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -36,13 +40,13 @@ Deno.serve(async (req: Request) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    if (!RESEND_API_KEY) {
+    if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
       await supabase
         .from("demandes_site")
-        .update({ notifie: false, notifie_erreur: "RESEND_API_KEY non configurée" })
+        .update({ notifie: false, notifie_erreur: "GMAIL_USER / GMAIL_APP_PASSWORD non configurés" })
         .eq("id", record.id);
       return new Response(
-        JSON.stringify({ ok: false, reason: "RESEND_API_KEY manquante — voir supabase/functions/notify-lead" }),
+        JSON.stringify({ ok: false, reason: "Identifiants Gmail manquants — voir supabase/functions/notify-lead" }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
     }
@@ -63,28 +67,32 @@ Deno.serve(async (req: Request) => {
       <p style="color:#666;font-size:12px">Enregistré automatiquement dans Supabase (table demandes_site, id ${record.id}).</p>
     `;
 
-    const resendRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
+    const client = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 465,
+        tls: true,
+        auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
       },
-      body: JSON.stringify({
-        from: NOTIFY_FROM,
-        to: [NOTIFY_TO],
-        reply_to: isEmail(record.contact) ? record.contact : undefined,
-        subject: sujet,
-        html,
-      }),
     });
 
-    if (!resendRes.ok) {
-      const errText = await resendRes.text();
+    try {
+      await client.send({
+        from: `SOTGEC Site <${GMAIL_USER}>`,
+        to: NOTIFY_TO,
+        replyTo: isEmail(record.contact) ? record.contact : undefined,
+        subject: sujet,
+        html,
+        content: "auto",
+      });
+      await client.close();
+    } catch (smtpErr) {
+      try { await client.close(); } catch (_) { /* déjà fermé */ }
       await supabase
         .from("demandes_site")
-        .update({ notifie: false, notifie_erreur: `Resend ${resendRes.status}: ${errText.slice(0, 500)}` })
+        .update({ notifie: false, notifie_erreur: `SMTP: ${String(smtpErr).slice(0, 500)}` })
         .eq("id", record.id);
-      return new Response(JSON.stringify({ ok: false, error: errText }), { status: 200 });
+      return new Response(JSON.stringify({ ok: false, error: String(smtpErr) }), { status: 200 });
     }
 
     await supabase
