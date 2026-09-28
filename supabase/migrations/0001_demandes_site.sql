@@ -1,8 +1,13 @@
 -- SOTGEC — enregistrement des demandes envoyées depuis les formulaires du site
 -- (contact, BTP, Immobilier, Consulting) + notification email automatique.
---
--- À appliquer une fois le projet Supabase réactivé (il est en pause au 28/09/2026).
 -- Corrige l'écart d'audit n°1 : "Rien n'est enregistré sur ce site."
+--
+-- Architecture : le site appelle directement la fonction Edge "notify-lead"
+-- (voir supabase/functions/notify-lead), qui enregistre la ligne avec la clé
+-- service_role PUIS envoie l'email interne. Le site n'a donc besoin d'aucune
+-- clé pour écrire dans la table (pas d'INSERT anonyme côté client), ce qui
+-- évite de dépendre du schéma interne supabase_functions/pg_net (webhooks
+-- DB) qui n'est pas toujours provisionné sur un projet tout juste créé.
 
 create table if not exists public.demandes_site (
   id uuid primary key default gen_random_uuid(),
@@ -33,36 +38,16 @@ create table if not exists public.demandes_site (
   note_interne text
 );
 
-comment on table public.demandes_site is 'Demandes envoyées depuis les formulaires du site sotgec.com (tous les métiers). Alimentée côté client par assets/js/site.js.';
+comment on table public.demandes_site is 'Demandes envoyées depuis les formulaires du site sotgec.com (tous les métiers). Insérée par la fonction Edge notify-lead (clé service_role) — le site n''écrit jamais directement dans cette table.';
 
--- Row Level Security : le site (clé publique/anon) peut seulement AJOUTER une ligne.
--- Personne ne peut lire, modifier ou supprimer avec la clé publique : seule la
--- clé "service role" (utilisée par la fonction notify-lead et par l'équipe via
--- le tableau de bord Supabase) a accès en lecture.
+-- Row Level Security : personne ne peut lire, modifier ou supprimer avec la
+-- clé publique du site. Seule la clé "service role" (utilisée par la
+-- fonction notify-lead et par l'équipe via le tableau de bord Supabase) a
+-- accès. Aucune police pour "anon" : la table est fermée par défaut dès que
+-- RLS est activée, ce qui est le comportement voulu ici.
 alter table public.demandes_site enable row level security;
-
-create policy "le site peut enregistrer une demande"
-  on public.demandes_site
-  for insert
-  to anon
-  with check (true);
 
 -- Index utiles pour le suivi (tableau de bord, tri par date/entité/statut)
 create index if not exists demandes_site_created_at_idx on public.demandes_site (created_at desc);
 create index if not exists demandes_site_entite_idx on public.demandes_site (entite);
 create index if not exists demandes_site_statut_idx on public.demandes_site (statut);
-
--- Déclenche automatiquement la fonction "notify-lead" (email interne) à chaque
--- nouvelle demande. supabase_functions.http_request est fournie par défaut
--- par Supabase (même mécanisme que les Database Webhooks créés depuis le
--- tableau de bord).
-create trigger on_nouvelle_demande
-  after insert on public.demandes_site
-  for each row
-  execute function supabase_functions.http_request(
-    'https://icjpmboahhsovvcijvhs.supabase.co/functions/v1/notify-lead',
-    'POST',
-    '{"Content-Type":"application/json"}',
-    '{}',
-    '5000'
-  );

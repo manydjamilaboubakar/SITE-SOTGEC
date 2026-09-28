@@ -1,19 +1,18 @@
 // SOTGEC — notify-lead
-// Envoie un email interne dès qu'une nouvelle demande arrive dans
-// public.demandes_site (déclenché par le trigger on_nouvelle_demande).
+// Point d'entrée unique appelé directement par le site (assets/js/site.js)
+// à chaque soumission de formulaire (Contact, BTP, Immobilier, Consulting) :
+//   1. enregistre la demande dans public.demandes_site (clé service_role —
+//      le site n'a besoin d'aucune clé pour écrire dans la table) ;
+//   2. envoie un email interne via le compte Gmail existant
+//      sotgec.btp@gmail.com (SMTP + mot de passe d'application).
 //
-// Envoi via le compte Gmail existant sotgec.btp@gmail.com, avec un mot de
-// passe d'application (pas le mot de passe du compte). Aucun nouveau
-// prestataire à créer. Secrets à définir :
-//   supabase secrets set GMAIL_USER=sotgec.btp@gmail.com --project-ref icjpmboahhsovvcijvhs
-//   supabase secrets set GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx --project-ref icjpmboahhsovvcijvhs
+// Secrets à définir avant que l'email fonctionne (voir supabase/README.md) :
+//   supabase secrets set GMAIL_USER=sotgec.btp@gmail.com --project-ref zgxvihvyjaeomezpwngq
+//   supabase secrets set GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx --project-ref zgxvihvyjaeomezpwngq
 //
-// Le mot de passe d'application se génère sur myaccount.google.com/apppasswords
-// (nécessite la validation en deux étapes activée sur le compte Gmail).
-//
-// Tant que les secrets ne sont pas définis, la fonction répond sans erreur et
-// marque simplement la demande comme "non notifiée" : aucune demande n'est
-// perdue, elle reste visible dans la table en attendant.
+// Tant que ces secrets ne sont pas définis, la demande est quand même
+// enregistrée (le point le plus important) ; seul l'email échoue,
+// silencieusement, et la ligne reste marquée "non notifiée".
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -33,27 +32,68 @@ const ENTITE_LABEL: Record<string, string> = {
   consulting: "SOTGEC Consulting",
 };
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: CORS_HEADERS });
+  }
+
   try {
-    const body = await req.json();
-    const record = body.record ?? body; // compat direct-call en test
+    const input = await req.json();
+
+    // Validation minimale : on refuse d'enregistrer une ligne vide, mais on
+    // ne bloque jamais le visiteur pour un champ optionnel manquant.
+    if (!input.entite || !input.nom || !input.contact || !input.message || !input.canal) {
+      return new Response(JSON.stringify({ ok: false, error: "Champs requis manquants" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+      });
+    }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    const { data: record, error: insertError } = await supabase
+      .from("demandes_site")
+      .insert({
+        entite: input.entite,
+        page_source: input.page_source ?? null,
+        langue: input.langue ?? "fr",
+        nom: String(input.nom).slice(0, 200),
+        contact: String(input.contact).slice(0, 200),
+        sujet: input.sujet ? String(input.sujet).slice(0, 200) : null,
+        pays: input.pays ?? null,
+        message: String(input.message).slice(0, 5000),
+        canal: input.canal,
+      })
+      .select()
+      .single();
+
+    if (insertError || !record) {
+      return new Response(JSON.stringify({ ok: false, error: insertError?.message ?? "insert failed" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+      });
+    }
 
     if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
       await supabase
         .from("demandes_site")
         .update({ notifie: false, notifie_erreur: "GMAIL_USER / GMAIL_APP_PASSWORD non configurés" })
         .eq("id", record.id);
-      return new Response(
-        JSON.stringify({ ok: false, reason: "Identifiants Gmail manquants — voir supabase/functions/notify-lead" }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ ok: true, id: record.id, emailed: false }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+      });
     }
 
     const entiteLabel = ENTITE_LABEL[record.entite] ?? record.entite;
     const sujet = `Nouvelle demande SOTGEC — ${entiteLabel}${record.sujet ? " · " + record.sujet : ""}`;
-    const pays = record.pays === "ci" ? "Côte d'Ivoire" : "Tchad";
+    const pays = record.pays === "ci" ? "Côte d'Ivoire" : record.pays === "td" ? "Tchad" : "—";
 
     const html = `
       <h2>${sujet}</h2>
@@ -67,16 +107,15 @@ Deno.serve(async (req: Request) => {
       <p style="color:#666;font-size:12px">Enregistré automatiquement dans Supabase (table demandes_site, id ${record.id}).</p>
     `;
 
-    const client = new SMTPClient({
-      connection: {
-        hostname: "smtp.gmail.com",
-        port: 465,
-        tls: true,
-        auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
-      },
-    });
-
     try {
+      const client = new SMTPClient({
+        connection: {
+          hostname: "smtp.gmail.com",
+          port: 465,
+          tls: true,
+          auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
+        },
+      });
       await client.send({
         from: `SOTGEC Site <${GMAIL_USER}>`,
         to: NOTIFY_TO,
@@ -87,12 +126,14 @@ Deno.serve(async (req: Request) => {
       });
       await client.close();
     } catch (smtpErr) {
-      try { await client.close(); } catch (_) { /* déjà fermé */ }
       await supabase
         .from("demandes_site")
         .update({ notifie: false, notifie_erreur: `SMTP: ${String(smtpErr).slice(0, 500)}` })
         .eq("id", record.id);
-      return new Response(JSON.stringify({ ok: false, error: String(smtpErr) }), { status: 200 });
+      return new Response(JSON.stringify({ ok: true, id: record.id, emailed: false }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+      });
     }
 
     await supabase
@@ -100,11 +141,15 @@ Deno.serve(async (req: Request) => {
       .update({ notifie: true, notifie_a: new Date().toISOString(), notifie_erreur: null })
       .eq("id", record.id);
 
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ ok: true, id: record.id, emailed: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...CORS_HEADERS },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: String(err) }), { status: 200 });
+    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+    });
   }
 });
 
