@@ -350,4 +350,19 @@ html[data-theme=light] .site-footer{background:#E9ECE9;color:var(--ink);border-t
 html[data-theme=light] .foot h2{color:var(--ink)}
 html[data-theme=light] .foot li,html[data-theme=light] .foot p,html[data-theme=light] .legal{color:var(--ink-2)}
 html[data-theme=light] .foot a:hover{color:#B35C00}
+
+/* bandeau de consentement (mesure d'audience) */
+.cookie-bar{position:fixed;left:0;right:0;bottom:0;z-index:300;display:flex;flex-wrap:wrap;align-items:center;gap:16px 24px;
+  padding:18px var(--gut);background:var(--night-3);color:var(--paper);border-top:1.5px solid var(--rule-d);
+  box-shadow:0 -8px 24px rgba(0,0,0,.28)}
+.cookie-bar p{margin:0;flex:1 1 320px;font-size:.92rem;line-height:1.5;color:var(--muted)}
+.cookie-bar p a{color:var(--paper);text-decoration:underline}
+.cookie-actions{display:flex;gap:10px;flex:0 0 auto}
+.cookie-bar .btn-solid,.cookie-bar .btn-line{padding:11px 18px;font-size:.88rem;clip-path:none}
+html[data-theme=light] .cookie-bar{background:#FFFFFF;color:var(--ink);border-top-color:var(--rule-l);box-shadow:0 -8px 24px rgba(30,42,53,.14)}
+html[data-theme=light] .cookie-bar p{color:var(--ink-2)}
+html[data-theme=light] .cookie-bar p a{color:var(--ink)}
+html[data-theme=light] .cookie-bar .btn-solid{background:var(--ink);color:var(--paper)}
+html[data-theme=light] .cookie-bar .btn-solid:hover{background:var(--orange);color:var(--ink)}
+@media (max-width:520px){.cookie-actions{width:100%}.cookie-actions button{flex:1 1 0}}
 html[data-theme=light] .legal{border-top-color:var(--rule-l)}
