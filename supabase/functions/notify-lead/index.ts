@@ -3,23 +3,31 @@
 // à chaque soumission de formulaire (Contact, BTP, Immobilier, Consulting) :
 //   1. enregistre la demande dans public.demandes_site (clé service_role —
 //      le site n'a besoin d'aucune clé pour écrire dans la table) ;
-//   2. envoie un email interne via le compte Gmail existant
-//      sotgec.btp@gmail.com (SMTP + mot de passe d'application).
+//   2. envoie un email interne via l'API Hostinger, depuis la vraie boîte
+//      du domaine manydjamilaboubakar@sotgec.com (déjà active chez
+//      l'hébergeur du site), vers sotgec.btp@gmail.com — la boîte déjà
+//      surveillée par l'équipe. Choisi plutôt que Gmail SMTP : l'expéditeur
+//      affiché est le domaine sotgec.com (plus professionnel) et aucun mot
+//      de passe d'application n'est nécessaire.
 //
-// Secrets à définir avant que l'email fonctionne (voir supabase/README.md) :
-//   supabase secrets set GMAIL_USER=sotgec.btp@gmail.com --project-ref zgxvihvyjaeomezpwngq
-//   supabase secrets set GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx --project-ref zgxvihvyjaeomezpwngq
+// Secret à définir avant que l'email fonctionne (voir supabase/README.md) :
+//   supabase secrets set HOSTINGER_API_TOKEN=xxxxxxxx --project-ref zgxvihvyjaeomezpwngq
 //
-// Tant que ces secrets ne sont pas définis, la demande est quand même
+// Tant que ce secret n'est pas défini, la demande est quand même
 // enregistrée (le point le plus important) ; seul l'email échoue,
 // silencieusement, et la ligne reste marquée "non notifiée".
+//
+// Limite connue : l'API Hostinger "send" n'accepte pas d'en-tête Reply-To
+// personnalisé (contrairement à l'ancienne version SMTP/Gmail). Le contact
+// du visiteur reste bien visible dans le corps de l'email ; l'équipe doit
+// le copier manuellement pour répondre, plutôt que de cliquer "Répondre".
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
-const GMAIL_USER = Deno.env.get("GMAIL_USER");
-const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+const HOSTINGER_API_TOKEN = Deno.env.get("HOSTINGER_API_TOKEN");
+const HOSTINGER_MAILBOX_ID = Deno.env.get("HOSTINGER_MAILBOX_ID") ?? "ACc2442f9422dc0b4168109c49c0c9"; // manydjamilaboubakar@sotgec.com
+const HOSTINGER_FROM_LABEL = Deno.env.get("HOSTINGER_FROM_LABEL") ?? "SOTGEC Site";
 const NOTIFY_TO = Deno.env.get("NOTIFY_TO") ?? "sotgec.btp@gmail.com";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -80,10 +88,10 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    if (!HOSTINGER_API_TOKEN) {
       await supabase
         .from("demandes_site")
-        .update({ notifie: false, notifie_erreur: "GMAIL_USER / GMAIL_APP_PASSWORD non configurés" })
+        .update({ notifie: false, notifie_erreur: "HOSTINGER_API_TOKEN non configuré" })
         .eq("id", record.id);
       return new Response(JSON.stringify({ ok: true, id: record.id, emailed: false }), {
         status: 200,
@@ -104,31 +112,49 @@ Deno.serve(async (req: Request) => {
       <strong>Page :</strong> ${escapeHtml(record.page_source ?? "")}</p>
       <p><strong>Message :</strong><br/>${escapeHtml(record.message).replace(/\n/g, "<br/>")}</p>
       <hr/>
-      <p style="color:#666;font-size:12px">Enregistré automatiquement dans Supabase (table demandes_site, id ${record.id}).</p>
+      <p style="color:#666;font-size:12px">Enregistré automatiquement dans Supabase (table demandes_site, id ${record.id}). Pour répondre au visiteur, utilisez directement son contact ci-dessus (l'API d'envoi ne permet pas de Reply-To personnalisé).</p>
     `;
+    const text = [
+      sujet,
+      "",
+      `Nom : ${record.nom}`,
+      `Contact : ${record.contact}`,
+      `Pays du projet : ${pays}`,
+      `Canal choisi par le visiteur : ${record.canal === "whatsapp" ? "WhatsApp" : "Email"}`,
+      `Page : ${record.page_source ?? ""}`,
+      "",
+      "Message :",
+      record.message,
+      "",
+      `— Enregistré automatiquement dans Supabase (id ${record.id})`,
+    ].join("\n");
 
     try {
-      const client = new SMTPClient({
-        connection: {
-          hostname: "smtp.gmail.com",
-          port: 465,
-          tls: true,
-          auth: { username: GMAIL_USER, password: GMAIL_APP_PASSWORD },
+      const res = await fetch(
+        `https://api.mail.hostinger.com/api/v1/mailboxes/${HOSTINGER_MAILBOX_ID}/send`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${HOSTINGER_API_TOKEN}`,
+          },
+          body: JSON.stringify({
+            to: [NOTIFY_TO],
+            displayName: HOSTINGER_FROM_LABEL,
+            subject: sujet,
+            html,
+            text,
+          }),
         },
-      });
-      await client.send({
-        from: `SOTGEC Site <${GMAIL_USER}>`,
-        to: NOTIFY_TO,
-        replyTo: isEmail(record.contact) ? record.contact : undefined,
-        subject: sujet,
-        html,
-        content: "auto",
-      });
-      await client.close();
-    } catch (smtpErr) {
+      );
+      if (res.status !== 204) {
+        const detail = await res.text();
+        throw new Error(`Hostinger API ${res.status}: ${detail.slice(0, 500)}`);
+      }
+    } catch (mailErr) {
       await supabase
         .from("demandes_site")
-        .update({ notifie: false, notifie_erreur: `SMTP: ${String(smtpErr).slice(0, 500)}` })
+        .update({ notifie: false, notifie_erreur: `Hostinger: ${String(mailErr).slice(0, 500)}` })
         .eq("id", record.id);
       return new Response(JSON.stringify({ ok: true, id: record.id, emailed: false }), {
         status: 200,
@@ -157,7 +183,4 @@ function escapeHtml(s: string): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
   );
-}
-function isEmail(s: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s ?? ""));
 }
