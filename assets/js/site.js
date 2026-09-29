@@ -5,12 +5,12 @@
   var S=EN?{menu:'Menu',close:'Close',toLight:'Switch to light mode',toDark:'Switch to dark mode',
             err:'Please enter your name, a way to reach you and your message.',hello:'Hello, I am writing from sotgec.com.',
             subject:'Subject: ',country:'Project country: ',td:'Chad',ci:'Côte d’Ivoire',name:'Name: ',contact:'Contact: ',mailSubject:'Request from sotgec.com: ',
-            cookieText:'We use audience-measurement cookies to understand how the site is used. No data is shared with third parties.',
+            cookieText:'We use Google Analytics to measure how the site is used, only if you accept. This data is processed by Google.',
             cookieAccept:'Accept',cookieDecline:'Decline',cookiePolicy:'Learn more'}
           :{menu:'Menu',close:'Fermer',toLight:'Passer en mode clair',toDark:'Passer en mode sombre',
             err:'Renseignez votre nom, un moyen de vous joindre et votre message.',hello:'Bonjour, je vous écris depuis sotgec.com.',
             subject:'Sujet : ',country:'Pays du projet : ',td:'Tchad',ci:'Côte d’Ivoire',name:'Nom : ',contact:'Contact : ',mailSubject:'Demande depuis sotgec.com : ',
-            cookieText:'Nous utilisons des cookies de mesure d’audience pour comprendre l’usage du site. Aucune donnée n’est partagée avec des tiers.',
+            cookieText:'Nous utilisons Google Analytics pour mesurer l’audience du site, uniquement si vous acceptez. Ces données sont traitées par Google.',
             cookieAccept:'Accepter',cookieDecline:'Refuser',cookiePolicy:'En savoir plus'};
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 

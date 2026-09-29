@@ -21,7 +21,7 @@
     btp:EN?'/en/construction/':'/btp/', immo:EN?'/en/real-estate/':'/immobilier/', conseil:EN?'/en/consulting/':'/consulting/'
   };
   var WA={td:'23595736513',ci:'2250712209441'};
-  var IMG={chantier:'/assets/media/chantier-poster.jpg',btp:'/assets/img/btp',immobilier:'/assets/img/immobilier',hse:'/assets/img/hse',projet:'/assets/img/projet'};
+  var IMG={chantier:'/assets/media/chantier-poster.jpg',btp:'/assets/img/btp',immobilier:'/assets/img/immobilier',hse:'/assets/img/hse',projet:'/assets/img/projet',residence:'/assets/img/residence-nuit',plans:'/assets/img/conseil-plans',immeuble:'/assets/img/chantier-immeuble'};
   function imgSrc(k){
     if(k==='chantier')return IMG.chantier;
     return IMG[k]+(window.innerWidth<=860?'-s':'')+'.webp';
@@ -54,7 +54,7 @@
          l:[['Un périmètre écrit, des points d’étape, un bilan à la fin.','A written scope, progress reviews, a final report.'],
             ['Seule une proposition écrite et signée engage SOTGEC.','Only a written, signed proposal binds SOTGEC.'],
             ['Le conseil est séparé des activités de construction.','Consulting is kept separate from construction.']]},
-        {i:'chantier',pos:'70% 60%',m:1,end:true,k:['Parlons de votre projet','Let’s talk about your project'],t:['Un seul interlocuteur, du terrain à la clé.','One point of contact, from plot to keys.'],
+        {i:'immeuble',pos:'60% 55%',m:1,end:true,k:['Parlons de votre projet','Let’s talk about your project'],t:['Un seul interlocuteur, du terrain à la clé.','One point of contact, from plot to keys.'],
          p:['À N’Djamena et à Abidjan, nous construisons, louons, vendons et sécurisons avec la même exigence.','In N’Djamena and Abidjan, we build, rent, sell and make projects safer to the same standard.'],
          contact:'contact'}
       ]
@@ -66,7 +66,7 @@
       scenes:[
         {i:'btp',pos:'60% 50%',m:0,k:['SOTGEC BTP','SOTGEC BTP'],t:['Construire et rénover avec méthode.','Building and renovating, methodically.'],
          p:['Entreprise de bâtiment et travaux publics basée à N’Djamena : des ouvrages neufs et des remises en état, de l’étude à la réception.','A building and public works company based in N’Djamena: new builds and refurbishments, from study to handover.']},
-        {i:'chantier',pos:'45% 60%',m:1,k:['Six domaines','Six fields'],t:['Un seul interlocuteur pour les coordonner.','One point of contact to coordinate them.'],
+        {i:'immeuble',pos:'50% 55%',m:1,k:['Six domaines','Six fields'],t:['Un seul interlocuteur pour les coordonner.','One point of contact to coordinate them.'],
          l:[['Construction de bâtiments','Building construction'],['Réfection et rénovation','Renovation and refurbishment'],['Travaux publics','Public works'],
             ['Hydraulique et assainissement','Water supply and sanitation'],['Études et ingénierie','Studies and engineering'],['Entretien et fournitures','Maintenance and supplies']]},
         {i:'projet',pos:'40% 50%',m:2,k:['Étapes 1 et 2','Steps 1 and 2'],t:['Étude, chiffrage, planning.','Study, pricing, planning.'],
@@ -75,7 +75,7 @@
          p:['Exécution suivie par un conducteur de travaux. Contrôles qualité et règles de sécurité appliquées.','Works overseen by a site manager. Quality checks and safety rules applied.']},
         {i:'hse',pos:'50% 55%',m:0,k:['Sécurité','Safety'],t:['Préparée avant l’ouverture du chantier.','Planned before the site opens.'],
          p:['Accès, protections, information des équipes et contrôles réguliers sont prévus dès la préparation, pas ajoutés en cours de route.','Access, protection, team briefings and regular checks are planned from the start, not added along the way.']},
-        {i:'chantier',pos:'70% 60%',m:1,end:true,k:['Étape 5 et après','Step 5 and after'],t:['Réception et suivi.','Handover and follow-up.'],
+        {i:'immeuble',pos:'40% 55%',m:1,end:true,k:['Étape 5 et après','Step 5 and after'],t:['Réception et suivi.','Handover and follow-up.'],
          p:['Levée des réserves, remise du dossier, suivi après livraison. Un dossier de références est disponible, avec l’accord de nos clients.','Snag clearance, handover file, after-delivery follow-up. A references file is available, shared with our clients’ consent.'],
          contact:'btp',ctaLabel:['Demander un devis','Request a quote']}
       ]
@@ -85,18 +85,18 @@
       name:['Louer, acheter, investir','Rent, buy, invest'],
       who:['Familles, entreprises, organisations, diaspora : comment nous accompagnons un bien.','Families, companies, organisations, diaspora: how we support a property project.'],
       scenes:[
-        {i:'immobilier',pos:'55% 50%',m:0,k:['SOTGEC Immobilier','SOTGEC Real Estate'],t:['Louer, vendre, promouvoir.','Rent, sell, develop.'],
+        {i:'residence',pos:'55% 55%',m:0,k:['SOTGEC Immobilier','SOTGEC Real Estate'],t:['Louer, vendre, promouvoir.','Rent, sell, develop.'],
          p:['Nous accompagnons propriétaires, entreprises et organisations, de la recherche du bien à la signature.','We support owners, companies and organisations, from finding the property to signing.']},
         {i:'immobilier',pos:'20% 60%',m:1,k:['Location','Rental'],t:['Nous cherchons, vous visitez.','We search, you visit.'],
          p:['Nous cherchons le bien, organisons les visites, vérifions le contrat et préparons la remise des clés.','We find the property, arrange viewings, check the lease and prepare the key handover.']},
         {i:'immobilier',pos:'80% 45%',m:2,k:['Vente','Sales'],t:['Jusqu’à la signature.','Through to signing.'],
          p:['Estimation, mise en vente, visites et accompagnement jusqu’à la signature.','Valuation, listing, viewings and support through to signing.']},
-        {i:'chantier',pos:'40% 60%',m:3,k:['Promotion immobilière','Property development'],t:['Avec l’appui de SOTGEC BTP.','With SOTGEC BTP behind it.'],
+        {i:'immeuble',pos:'55% 55%',m:3,k:['Promotion immobilière','Property development'],t:['Avec l’appui de SOTGEC BTP.','With SOTGEC BTP behind it.'],
          p:['Montage et suivi de programmes, avec l’appui de SOTGEC BTP pour la construction.','Setting up and managing projects, with SOTGEC BTP handling construction.']},
         {i:'projet',pos:'60% 50%',m:0,k:['Votre demande','Your request'],t:['Quatre étapes, un seul contact.','Four steps, one contact.'],
          l:[['1. Votre besoin : type de bien, lieu, budget, délai','1. Your needs: type of property, location, budget, timing'],['2. La sélection des biens qui correspondent','2. A shortlist of matching properties'],
             ['3. Les visites, organisées et accompagnées','3. Viewings, arranged and accompanied'],['4. Le contrat : documents vérifiés, signature, remise des clés','4. The contract: document checks, signing, key handover']]},
-        {i:'immobilier',pos:'50% 50%',m:1,end:true,k:['Notre catalogue se construit','Our listings are being built up'],t:['Dites-nous ce que vous cherchez.','Tell us what you are looking for.'],
+        {i:'residence',pos:'35% 55%',m:1,end:true,k:['Notre catalogue se construit','Our listings are being built up'],t:['Dites-nous ce que vous cherchez.','Tell us what you are looking for.'],
          p:['Le catalogue de biens est en cours de constitution : décrivez ce que vous cherchez ou ce que vous souhaitez confier.','Our property listings are being built up: tell us what you are looking for or what you would like to entrust to us.'],
          contact:'immo',ctaLabel:['Demander des renseignements','Ask for information']}
       ]
@@ -108,13 +108,13 @@
       scenes:[
         {i:'hse',pos:'45% 55%',m:0,k:['SOTGEC Consulting','SOTGEC Consulting'],t:['Sécuriser et piloter.','Safer projects, better managed.'],
          p:['Conseil et formation en HSE et en management de projet. On commence par un diagnostic, puis on accompagne la mise en œuvre.','Consulting and training in HSE and project management. We start with an assessment, then support implementation.']},
-        {i:'projet',pos:'35% 45%',m:1,k:['Marche 1','Step 1'],t:['Le diagnostic.','The assessment.'],
+        {i:'plans',pos:'50% 55%',m:1,k:['Marche 1','Step 1'],t:['Le diagnostic.','The assessment.'],
          p:['Nous mesurons où vous en êtes et ce qu’il faut traiter en premier : état des lieux, écarts constatés, plan d’actions priorisé.','We measure where you stand and what to address first: current situation, gaps found, a prioritised action plan.']},
         {i:'hse',pos:'25% 55%',m:2,k:['Marche 2','Step 2'],t:['L’accompagnement mensuel.','Monthly support.'],
          p:['Suivi du plan d’actions, audits internes, indicateurs, appui aux équipes : mois après mois.','Action plan follow-up, internal audits, indicators, support for your teams: month after month.']},
         {i:'btp',pos:'40% 50%',m:3,k:['Marche 3','Step 3'],t:['La formation pratique.','Hands-on training.'],
          p:['Des modules courts, construits sur les situations réelles de vos sites, pour que les acquis restent en place.','Short modules built on real situations from your sites, so the gains stay in place.']},
-        {i:'projet',pos:'65% 40%',m:0,k:['Management de projet','Project management'],t:['Cadrer, suivre, maîtriser.','Scope, track, control.'],
+        {i:'plans',pos:'65% 50%',m:0,k:['Management de projet','Project management'],t:['Cadrer, suivre, maîtriser.','Scope, track, control.'],
          l:[['Cadrage et planification','Scoping and planning'],['Suivi des coûts et des délais','Cost and schedule control'],['Maîtrise des risques','Risk management'],['Reporting aux décideurs','Reporting to decision-makers']]},
         {i:'hse',pos:'60% 50%',m:1,end:true,k:['Indépendance','Independence'],t:['Un conseil séparé de la construction.','Advice kept separate from construction.'],
          p:['SOTGEC Consulting intervient indépendamment des activités de construction du groupe. Les intervenants et leurs qualifications sont présentés dans chaque proposition.','SOTGEC Consulting works independently of the group’s construction business. The team and their credentials are set out in each proposal.'],
