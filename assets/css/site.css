@@ -366,3 +366,5 @@ html[data-theme=light] .cookie-bar .btn-solid{background:var(--ink);color:var(--
 html[data-theme=light] .cookie-bar .btn-solid:hover{background:var(--orange);color:var(--ink)}
 @media (max-width:520px){.cookie-actions{width:100%}.cookie-actions button{flex:1 1 0}}
 html[data-theme=light] .legal{border-top-color:var(--rule-l)}
+
+.aud{margin:clamp(44px,5vw,80px) 0 clamp(20px,2.6vw,32px)}.aud:first-of-type{margin-top:clamp(28px,3vw,44px)}.aud-t{font:800 clamp(1.5rem,2.6vw,2.1rem) var(--f-d);font-stretch:106%;margin:0 0 6px}.aud p{margin:0;color:var(--ink-2);max-width:62ch}.cat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(28px,4vw,72px)}@media(max-width:860px){.cat{grid-template-columns:1fr}}
